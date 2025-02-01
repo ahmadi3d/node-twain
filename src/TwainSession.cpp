@@ -706,11 +706,10 @@ int TwainSession::transferFile(TW_UINT16 fileFormat, std::vector<std::string> im
     bool bPendingXfers = true;
     TW_UINT16 rc = TWRC_FAILURE;
     int index = 0;
-    std::string fileName = images[index];
+
     while (bPendingXfers)
     {
         TW_MEMREF hImg = NULL;
-
         rc = entry(DG_IMAGE, DAT_IMAGENATIVEXFER, MSG_GET, (TW_MEMREF)&hImg, pSource);
 
         switch (rc)
@@ -724,12 +723,14 @@ int TwainSession::transferFile(TW_UINT16 fileFormat, std::vector<std::string> im
 
             LPVOID lpDIB = GlobalLock((HGLOBAL)hImg);
 
-            std::ofstream outFile(fileName.c_str(), std::ios::binary);
+            // Generate file name using a counter
+            std::string fileName = "output/image_" + std::to_string(index) + ".bmp";
 
+            std::ofstream outFile(fileName, std::ios::binary);
             outFile.write((char *)&bmfHeader, sizeof(BITMAPFILEHEADER));
             outFile.write((char *)lpDIB, GlobalSize((HGLOBAL)hImg));
-
             outFile.close();
+
             GlobalUnlock((HGLOBAL)hImg);
             GlobalFree((HGLOBAL)hImg);
 
@@ -741,12 +742,12 @@ int TwainSession::transferFile(TW_UINT16 fileFormat, std::vector<std::string> im
                 if (pendXfers.Count == 0)
                 {
                     bPendingXfers = false;
-                     return index+1;
+                    return index + 1;  // Return number of images transferred
                 }
                 else
                 {
-                    fileName = images[++index];
-                    std::cout << "Remaining images to transfer" << pendXfers.Count << std::endl;
+                    std::cout << "Remaining images to transfer: " << pendXfers.Count << std::endl;
+                    ++index; // Increment counter for next file
                 }
             }
             else
@@ -766,18 +767,17 @@ int TwainSession::transferFile(TW_UINT16 fileFormat, std::vector<std::string> im
             GlobalFree((HGLOBAL)hImg);
             break;
         case TWRC_CHECKSTATUS:
-            // bPendingXfers = false;
             std::cout << "-----------------TWRC_CHECKSTATUS" << std::endl;
-            // GlobalFree((HGLOBAL)hImg);
             break;
         default:
-            std::cout << "-----------------default" <<rc<< std::endl;
+            std::cout << "-----------------default" << rc << std::endl;
             break;
         }
     }
     state = 5;
     return 0;
 }
+
 void TwainSession::transferMemory()
 {
     std::cout << "starting a TWSX_MEMORY transfer..." << std::endl;
