@@ -39,7 +39,7 @@ interface Configure {
 }
 
 
-declare module "node-twain" {
+declare module "true-twain" {
 
     /****************************************************************************
      * Country Constants                                                        *

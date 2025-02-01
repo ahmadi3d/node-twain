@@ -1,6 +1,6 @@
 {
   "name": "true-twain",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A TWAIN library for nodejs.",
   "keywords": [
     "TWAIN",
@@ -17,7 +17,7 @@
     "url": "git+https://github.com/ahmadi3d/true-twain.git"
   },
   "scripts": {
-    "start": "node-gyp configure build --debug",
+    "build": "node-gyp configure build --debug",
     "tsc": "tsc -w",
     "test": "jest --watch"
   },
