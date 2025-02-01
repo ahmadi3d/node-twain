@@ -1,6 +1,6 @@
 {
-  "name": "node-twain",
-  "version": "0.0.16",
+  "name": "true-twain",
+  "version": "0.0.2",
   "description": "A TWAIN library for nodejs.",
   "keywords": [
     "TWAIN",
@@ -8,13 +8,13 @@
     "scan",
     "scanner"
   ],
-  "author": "Luomusha",
+  "author": "ahmadi3d",
   "license": "ISC",
   "main": "index.js",
   "types": "twain.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/luomusha/node-twain.git"
+    "url": "git+https://github.com/ahmadi3d/true-twain.git"
   },
   "scripts": {
     "start": "node-gyp configure build --debug",
