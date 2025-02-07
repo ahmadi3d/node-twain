@@ -115,6 +115,9 @@ private:
     int transferFile(TW_UINT16 fileFormat,std::vector<std::string> images);
     void transferMemory();
 
+    void disableUI();
+    void log(const std::string& message);
+
     bool parseCapability(TW_CAPABILITY *pCap, TW_UINT32& val);
 
     static const std::string convertReturnCodeToString(const TW_UINT16 value);

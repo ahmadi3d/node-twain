@@ -1,6 +1,6 @@
 {
   "name": "true-twain",
-  "version": "0.0.5",
+  "version": "0.0.12",
   "description": "A TWAIN library for nodejs.",
   "keywords": [
     "TWAIN",

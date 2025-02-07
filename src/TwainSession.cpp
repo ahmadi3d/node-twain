@@ -27,6 +27,8 @@ void TwainSession::fillIdentity(TW_IDENTITY id)
 
 TW_UINT16 TwainSession::loadDSM()
 {
+    log("LoadDSM");
+    disableUI();
     TW_UINT16 rc = TWRC_FAILURE;
     // load library
     std::cout << "Load Library:" << kTWAIN_DSM_DIR << kTWAIN_DSM_DLL_NAME << std::endl;
@@ -98,11 +100,35 @@ TW_UINT16 TwainSession::freeDSM()
     return rc;
 }
 
-TW_UINT16 TwainSession::entry(TW_UINT32 DG, TW_UINT16 DAT, TW_UINT16 MSG, TW_MEMREF pData, pTW_IDENTITY pDataSource)
-{
+TW_UINT16 TwainSession::entry(TW_UINT32 DG, TW_UINT16 DAT, TW_UINT16 MSG, TW_MEMREF pData, pTW_IDENTITY pDataSource) {
+    log("Inside entry A");
     TW_UINT16 rc = TWRC_FAILURE;
+    log("Inside entry B");
     status.ConditionCode = TWCC_SUCCESS;
+    log("Inside entry B1");
+    // Disable the UI to suppress the dialog
+    TW_USERINTERFACE ui;
+    log("Inside entry B2");
+    std::memset(&ui, 0, sizeof(TW_USERINTERFACE));
+    log("Inside entry B3");
+    ui.ShowUI = false;  // Disable UI
+    ui.ModalUI = false; // Disable modal dialogs
+    
+    // Set the user interface configuration (prevents dialogs)
+    rc = dsmEntry(&identity, pDataSource, DG_CONTROL, DAT_USERINTERFACE, MSG_SET, &ui);
+    log("Inside entry B4");
+
+    TW_CAPABILITY cap;
+cap.Cap = CAP_AUTOFEED;
+cap.ConType = TWON_ONEVALUE;
+cap.hContainer = NULL; // Disable ADF
+rc = dsmEntry(&identity, pDataSource, DG_CONTROL, DAT_CAPABILITY, MSG_SET, &cap);
+log("Inside entry B5");
+
+    // Now call the actual operation
     rc = dsmEntry(&identity, pDataSource, DG, DAT, MSG, pData);
+    log("Inside entry D");
+
     std::cout << "Triplet:"
               << convertDataGroupToString(DG)
               << " / "
@@ -111,19 +137,25 @@ TW_UINT16 TwainSession::entry(TW_UINT32 DG, TW_UINT16 DAT, TW_UINT16 MSG, TW_MEM
               << convertMessageToString(MSG)
               << std::endl;
     std::cout << "RC:" << convertReturnCodeToString(rc) << std::endl;
-    if ((rc == TWRC_FAILURE) || (rc == TWRC_CHECKSTATUS))
-    {
+    
+    if ((rc == TWRC_FAILURE) || (rc == TWRC_CHECKSTATUS)) {
+        log("Inside entry E");
         TW_UINT16 erc = dsmEntry(&identity, pDataSource, DG_CONTROL, DAT_STATUS, MSG_GET, (TW_MEMREF)&status);
         std::cout << "---------- ERROR -----------" << std::endl;
         std::cout << "RC:" << convertReturnCodeToString(erc) << std::endl;
         std::cout << "CC:" << convertConditionCodeToString(status.ConditionCode) << std::endl;
     }
 
+    log("Inside entry F");
     return rc;
 }
 
+
 TW_UINT16 TwainSession::openDSM()
 {
+    log("OpenDSM");
+    disableUI();
+
     TW_UINT16 rc = TWRC_FAILURE;
     if (state != 2)
     {
@@ -262,6 +294,8 @@ TW_UINT16 TwainSession::getSources()
 
 TW_UINT16 TwainSession::openDS()
 {
+    disableUI();
+    
     TW_UINT16 rc = TWRC_FAILURE;
     if (state != 3)
     {
@@ -457,14 +491,18 @@ TW_UINT16 TwainSession::enableDS()
         std::cout << "enableDS :: You have enabled the DS." << state << std::endl;
         return TWRC_FAILURE;
     }
-    std::cout << "Before message:" << message << std::endl;
 
+    log("Before A");
+    std::cout << "Before message:" << message << std::endl;
+    log("Before B");
     ui.ShowUI = false;
     ui.ModalUI = false;
     ui.hParent = NULL;
     TW_UINT16 rc = entry(DG_CONTROL, DAT_USERINTERFACE, MSG_ENABLEDS, (TW_MEMREF)&ui, pSource);
+    log("Before C");
     if (rc == TWRC_SUCCESS)
     {
+        log("Before D");
         state = 5;
     }
     std::cout << "After message:" << message << std::endl;
@@ -580,6 +618,7 @@ void TwainSession::initCap()
 }
 TW_UINT16 TwainSession::scan(TW_UINT32 mech, std::vector<std::string> fileNames)
 {
+    disableUI();
     if (state != 6)
     {
         std::cout << "A scan cannot be initiated unless we are in state 6" << std::endl;
@@ -2051,4 +2090,13 @@ TW_FIX32 TwainSession::floatToFix32(float floater)
 float TwainSession::fix32ToFloat(const TW_FIX32 &fix32)
 {
     return float(fix32.Whole) + float(fix32.Frac / 65536.0);
+}
+
+void TwainSession::disableUI() {
+    ui.ShowUI = false;     // Disable the UI dialog
+    ui.ModalUI = false;    // Prevent the UI from being modal
+}
+
+void TwainSession::log(const std::string& message) {
+    std::cout << message << std::endl;
 }
